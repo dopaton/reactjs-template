@@ -1,6 +1,6 @@
 import { type FC } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import './GameNav.css';
+import { Tabbar } from '@telegram-apps/telegram-ui';
 
 interface NavItem {
   path: string;
@@ -12,8 +12,8 @@ const navItems: NavItem[] = [
   { path: '/', icon: '🎮', label: 'Game' },
   { path: '/shop', icon: '🛒', label: 'Shop' },
   { path: '/tasks', icon: '📋', label: 'Tasks' },
+  { path: '/friends', icon: '👥', label: 'Friends' },
   { path: '/wallet', icon: '💎', label: 'Wallet' },
-  { path: '/stats', icon: '📊', label: 'Stats' },
 ];
 
 export const GameNav: FC = () => {
@@ -21,17 +21,17 @@ export const GameNav: FC = () => {
   const navigate = useNavigate();
 
   return (
-    <nav className="game-nav">
+    <Tabbar>
       {navItems.map((item) => (
-        <button
+        <Tabbar.Item
           key={item.path}
-          className={`game-nav__item ${location.pathname === item.path ? 'game-nav__item--active' : ''}`}
+          text={item.label}
+          selected={location.pathname === item.path}
           onClick={() => navigate(item.path)}
         >
-          <span className="game-nav__icon">{item.icon}</span>
-          <span className="game-nav__label">{item.label}</span>
-        </button>
+          <span style={{ fontSize: 24, lineHeight: 1 }}>{item.icon}</span>
+        </Tabbar.Item>
       ))}
-    </nav>
+    </Tabbar>
   );
 };

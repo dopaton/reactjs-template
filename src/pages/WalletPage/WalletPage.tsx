@@ -1,7 +1,17 @@
 import type { FC } from 'react';
-import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react';
-import { useGame } from '@/game/GameContext';
-import './WalletPage.css';
+import { formatDistanceToNow } from 'date-fns';
+import { TonConnectButton, useTonWallet, useTonAddress } from '@tonconnect/ui-react';
+import { useGameStore } from '@/game/store';
+import {
+  Section,
+  Cell,
+  Button,
+  Banner,
+  Headline,
+  Caption,
+  Subheadline,
+  Placeholder,
+} from '@telegram-apps/telegram-ui';
 
 const WITHDRAW_THRESHOLD = 100_000;
 const COIN_TO_TON_RATE = 0.000001; // 1M coins = 1 TON
@@ -13,87 +23,136 @@ function formatNumber(n: number): string {
   return Math.floor(n).toLocaleString();
 }
 
+function truncateAddress(address: string): string {
+  if (address.length <= 16) return address;
+  return `${address.slice(0, 8)}...${address.slice(-8)}`;
+}
+
 export const WalletPage: FC = () => {
-  const { state } = useGame();
+  const state = useGameStore(s => s.state);
   const wallet = useTonWallet();
+  const address = useTonAddress(false);
+  const friendlyAddress = useTonAddress(true);
+
+  if (!state) return null;
+
   const tonValue = (state.coins * COIN_TO_TON_RATE).toFixed(6);
   const canWithdraw = state.coins >= WITHDRAW_THRESHOLD && !!wallet;
 
   return (
-    <div className="wallet-page">
-      <div className="wallet-page__title">Wallet</div>
+    <div className="pb-20">
+      {/* Balance Card */}
+      <Banner
+        header={`🪙 ${formatNumber(state.coins)}`}
+        subheader={`≈ ${tonValue} TON`}
+        type="section"
+        className="m-2 text-center"
+      />
 
-      <div className="wallet-page__balance-card">
-        <div className="wallet-page__balance-label">Your Balance</div>
-        <div className="wallet-page__balance-amount">
-          🪙 {formatNumber(state.coins)}
-        </div>
-        <div className="wallet-page__balance-usd">
-          ≈ {tonValue} TON
-        </div>
-      </div>
-
-      {!wallet ? (
-        <div className="wallet-page__connect-section">
-          <div className="wallet-page__connect-title">Connect Wallet</div>
-          <div className="wallet-page__connect-desc">
-            Connect your TON wallet to withdraw your earned coins as tokens.
-          </div>
-          <div className="wallet-page__connect-btn-wrapper">
-            <TonConnectButton />
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="wallet-page__withdraw-section">
-            <div className="wallet-page__withdraw-title">Withdraw</div>
-            <div className="wallet-page__withdraw-desc">
-              Convert your coins to TON tokens and withdraw to your wallet.
-            </div>
-            <div className="wallet-page__withdraw-info">
-              <div className="wallet-page__withdraw-row">
-                <span className="wallet-page__withdraw-label">Min. withdrawal</span>
-                <span className="wallet-page__withdraw-value">
-                  {formatNumber(WITHDRAW_THRESHOLD)} coins
-                </span>
-              </div>
-              <div className="wallet-page__withdraw-row">
-                <span className="wallet-page__withdraw-label">Exchange rate</span>
-                <span className="wallet-page__withdraw-value">
-                  1M coins = 1 TON
-                </span>
-              </div>
-              <div className="wallet-page__withdraw-row">
-                <span className="wallet-page__withdraw-label">You receive</span>
-                <span className="wallet-page__withdraw-value">
-                  {tonValue} TON
-                </span>
-              </div>
-            </div>
-            <button
-              className={`wallet-page__withdraw-btn ${
-                canWithdraw ? 'wallet-page__withdraw-btn--active' : 'wallet-page__withdraw-btn--disabled'
-              }`}
-              disabled={!canWithdraw}
-              onClick={() => {
-                if (canWithdraw) {
-                  alert(`Withdrawal of ${tonValue} TON requested! This feature will be enabled when the token launches.`);
-                }
-              }}
+      {/* Wallet Connection */}
+      <Section header="TON Wallet">
+        {!wallet ? (
+          <>
+            <Placeholder
+              header="Connect Your Wallet"
+              description="Link your TON wallet to withdraw earned coins as tokens."
             >
-              {state.coins < WITHDRAW_THRESHOLD
-                ? `Need ${formatNumber(WITHDRAW_THRESHOLD - state.coins)} more coins`
-                : 'Withdraw to Wallet'}
-            </button>
-          </div>
-
-          <div className="wallet-page__wallet-info">
-            <div className="wallet-page__wallet-info-title">Connected Wallet</div>
-            <div className="wallet-page__wallet-address">
-              {wallet.account.address}
+              <span className="text-6xl">💎</span>
+            </Placeholder>
+            <div className="flex justify-center p-4">
+              <TonConnectButton />
             </div>
-          </div>
-        </>
+          </>
+        ) : (
+          <>
+            <Cell
+              before={<span className="text-2xl">✅</span>}
+              subtitle={
+                <Caption className="font-mono break-all">
+                  {friendlyAddress ? truncateAddress(friendlyAddress) : truncateAddress(address)}
+                </Caption>
+              }
+            >
+              <Subheadline weight="1">Wallet Connected</Subheadline>
+            </Cell>
+            <div className="flex justify-center p-4">
+              <TonConnectButton />
+            </div>
+          </>
+        )}
+      </Section>
+
+      {/* Withdraw Section */}
+      <Section header="Withdraw">
+        <Cell
+          before={<span className="text-xl">📊</span>}
+          after={<Caption>{formatNumber(WITHDRAW_THRESHOLD)} coins</Caption>}
+        >
+          Min. withdrawal
+        </Cell>
+        <Cell
+          before={<span className="text-xl">💱</span>}
+          after={<Caption>1M coins = 1 TON</Caption>}
+        >
+          Exchange rate
+        </Cell>
+        <Cell
+          before={<span className="text-xl">💎</span>}
+          after={<Headline weight="1">{tonValue} TON</Headline>}
+        >
+          You receive
+        </Cell>
+
+        <div className="p-4">
+          <Button
+            size="l"
+            mode={canWithdraw ? 'filled' : 'gray'}
+            stretched
+            disabled={!canWithdraw}
+            onClick={() => {
+              if (canWithdraw) {
+                alert(`Withdrawal of ${tonValue} TON requested! This feature will be enabled when the token launches.`);
+              }
+            }}
+          >
+            {!wallet
+              ? '🔗 Connect wallet first'
+              : state.coins < WITHDRAW_THRESHOLD
+                ? `Need ${formatNumber(WITHDRAW_THRESHOLD - state.coins)} more coins`
+                : '💎 Withdraw to Wallet'
+            }
+          </Button>
+        </div>
+      </Section>
+
+      {/* Purchase History */}
+      {state.purchases.length > 0 && (
+        <Section header={`Purchase History (${state.purchases.length})`}>
+          {state.purchases.map((purchase, i) => (
+            <Cell
+              key={i}
+              before={<span className="text-xl">💎</span>}
+              subtitle={
+                <Caption>
+                  {formatDistanceToNow(new Date(purchase.timestamp), { addSuffix: true })}
+                </Caption>
+              }
+              after={
+                <Subheadline weight="2" className="text-game-accent">
+                  +{formatNumber(purchase.coins)} 🪙
+                </Subheadline>
+              }
+            >
+              {purchase.priceTON} TON
+            </Cell>
+          ))}
+          <Cell
+            before={<span className="text-xl">📊</span>}
+            after={<Headline weight="1">{state.totalSpentTON.toFixed(2)} TON</Headline>}
+          >
+            Total Spent
+          </Cell>
+        </Section>
       )}
     </div>
   );

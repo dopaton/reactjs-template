@@ -1,67 +1,85 @@
 import type { FC } from 'react';
-import { useGame } from '@/game/GameContext';
+import { useGameStore } from '@/game/store';
+import { getReferralLink } from '@/game/store';
 import { getDailyTasks } from '@/game/constants';
-import './TasksPage.css';
+import {
+  Section,
+  Cell,
+  Button,
+  Banner,
+  Headline,
+  Caption,
+} from '@telegram-apps/telegram-ui';
 
 export const TasksPage: FC = () => {
-  const { state, claimDailyTask, canClaimTask } = useGame();
+  const state = useGameStore(s => s.state);
+  const claimDailyTask = useGameStore(s => s.claimDailyTask);
+  const canClaimTask = useGameStore(s => s.canClaimTask);
+
+  if (!state) return null;
+
   const tasks = getDailyTasks(state.loginStreak);
 
-  return (
-    <div className="tasks-page">
-      <div className="tasks-page__title">Daily Tasks</div>
-      <div className="tasks-page__streak">
-        🔥 Login Streak: {state.loginStreak} day{state.loginStreak !== 1 ? 's' : ''}
-      </div>
+  const handleInvite = () => {
+    const link = getReferralLink(state.userId);
+    const text = '🎮 Join me in CoinTap and earn coins together! Use my invite link to get a bonus:';
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+    window.open(shareUrl, '_blank');
+  };
 
-      <div className="tasks-page__list">
+  return (
+    <div className="pb-20">
+      <Section header={`Daily Tasks • 🔥 ${state.loginStreak} day streak`}>
         {tasks.map((task) => {
           const isCompleted = state.dailyTasksCompleted.includes(task.id);
           const canClaim = canClaimTask(task.id);
 
           return (
-            <div key={task.id} className="task-card">
-              <div className="task-card__icon">{task.icon}</div>
-              <div className="task-card__info">
-                <div className="task-card__name">{task.title}</div>
-                <div className="task-card__desc">{task.description}</div>
-                <div className="task-card__reward">+{task.reward.toLocaleString()} 🪙</div>
-              </div>
-              <button
-                className={`task-card__btn ${
-                  isCompleted
-                    ? 'task-card__btn--done'
-                    : canClaim
-                      ? 'task-card__btn--claim'
-                      : 'task-card__btn--locked'
-                }`}
-                onClick={() => canClaim && !isCompleted && claimDailyTask(task.id, task.reward)}
-                disabled={isCompleted || !canClaim}
-              >
-                {isCompleted ? '✓ Done' : canClaim ? 'Claim' : 'In Progress'}
-              </button>
-            </div>
+            <Cell
+              key={task.id}
+              before={<span className="text-3xl">{task.icon}</span>}
+              subtitle={
+                <span>
+                  {task.description}
+                  <Caption className="text-coin font-semibold">
+                    {' '}+{task.reward.toLocaleString()} 🪙
+                  </Caption>
+                </span>
+              }
+              after={
+                isCompleted ? (
+                  <Button size="s" mode="gray" disabled>✓ Done</Button>
+                ) : canClaim ? (
+                  <Button
+                    size="s"
+                    mode="filled"
+                    onClick={() => claimDailyTask(task.id, task.reward)}
+                  >
+                    Claim
+                  </Button>
+                ) : (
+                  <Button size="s" mode="gray" disabled>In Progress</Button>
+                )
+              }
+            >
+              <Headline weight="2" className="text-[15px]">{task.title}</Headline>
+            </Cell>
           );
         })}
-      </div>
+      </Section>
 
-      <div className="tasks-page__section-title">Bonus</div>
-      <div className="tasks-page__invite-card">
-        <div className="tasks-page__invite-icon">👥</div>
-        <div className="tasks-page__invite-title">Invite Friends</div>
-        <div className="tasks-page__invite-desc">
-          Earn 1,000 coins for each friend who joins!
-        </div>
-        <button
-          className="tasks-page__invite-btn"
-          onClick={() => {
-            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent('Join me in CoinTap and earn coins! 🪙')}`;
-            window.open(shareUrl, '_blank');
-          }}
+      <Section header="Bonus">
+        <Banner
+          header="Invite Friends"
+          subheader="Earn 2,500 coins for each friend who joins via your link! Your friend also gets 1,000 bonus coins."
+          type="section"
+          className="m-2"
         >
-          Invite Friends
-        </button>
-      </div>
+          <Button size="m" onClick={handleInvite}>
+            👥 Invite Friends
+          </Button>
+        </Banner>
+      </Section>
     </div>
   );
 };

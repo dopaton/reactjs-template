@@ -1,4 +1,16 @@
-import type { Upgrade, DailyTask } from './types';
+import type { Upgrade, DailyTask, CoinPackage } from './types';
+
+/** Bot configuration */
+export const BOT_USERNAME = 'pudgyworldbot';
+export const BOT_APP_URL = `https://t.me/${BOT_USERNAME}/app`;
+
+/** TON wallet address for receiving payments */
+export const OWNER_TON_ADDRESS = 'UQAWUTnnEdrJYp-lbjxte_vnaxmWsMpEB-Emp6DKW3FEKtnj';
+
+/** Referral rewards */
+export const REFERRAL_REWARD = 2500;           // Coins for referrer when friend joins
+export const REFERRAL_FRIEND_BONUS = 1000;     // Bonus coins for the referred friend
+export const REFERRAL_EARN_PERCENT = 0.10;     // 10% of referral's earnings
 
 export const INITIAL_ENERGY = 1000;
 export const INITIAL_TAP_POWER = 1;
@@ -114,6 +126,14 @@ export function getDailyTasks(streak: number): DailyTask[] {
       icon: '⬆️',
       completed: false,
     },
+    {
+      id: 'invite-friend',
+      title: 'Invite a Friend',
+      description: 'Invite a friend via your referral link',
+      reward: baseReward * 5,
+      icon: '👥',
+      completed: false,
+    },
   ];
 }
 
@@ -131,3 +151,51 @@ export function getLevelProgress(totalCoins: number): number {
   const needed = LEVEL_THRESHOLDS[level + 1] - LEVEL_THRESHOLDS[level];
   return current / needed;
 }
+
+/** In-app coin packages purchasable with TON */
+export const COIN_PACKAGES: CoinPackage[] = [
+  {
+    id: 'starter',
+    name: 'Starter Pack',
+    description: '5,000 coins to get started',
+    icon: '💰',
+    coins: 5_000,
+    priceTON: 0.1,
+  },
+  {
+    id: 'popular',
+    name: 'Popular Pack',
+    description: '25,000 coins + 20% bonus',
+    icon: '🎁',
+    coins: 30_000,
+    priceTON: 0.5,
+    bonus: '+20%',
+  },
+  {
+    id: 'pro',
+    name: 'Pro Pack',
+    description: '60,000 coins + 30% bonus',
+    icon: '⭐',
+    coins: 78_000,
+    priceTON: 1.0,
+    bonus: '+30%',
+  },
+  {
+    id: 'whale',
+    name: 'Whale Pack',
+    description: '200,000 coins + 50% bonus',
+    icon: '🐋',
+    coins: 300_000,
+    priceTON: 3.0,
+    bonus: '+50%',
+  },
+  {
+    id: 'ultimate',
+    name: 'Ultimate Pack',
+    description: '500,000 coins + 75% bonus',
+    icon: '👑',
+    coins: 875_000,
+    priceTON: 5.0,
+    bonus: '+75%',
+  },
+];
