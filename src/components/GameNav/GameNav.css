@@ -1,0 +1,50 @@
+.game-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: var(--tg-theme-bg-color, #1a1a2e);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 0;
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
+  z-index: 100;
+}
+
+.game-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  background: none;
+  border: none;
+  font-family: inherit;
+}
+
+.game-nav__item--active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.game-nav__icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.game-nav__label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--tg-theme-hint-color, #8e8e93);
+  transition: color 0.2s ease;
+}
+
+.game-nav__item--active .game-nav__label {
+  color: var(--tg-theme-link-color, #007aff);
+}
